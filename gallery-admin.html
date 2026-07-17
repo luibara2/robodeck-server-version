@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robodeck Gallery</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif}body{max-width:1100px;margin:0 auto;padding:24px;background:#101116;color:#eee}h1{color:#65d8ff;margin-bottom:4px}.note{color:#aaa}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;padding:16px;background:#191b23;border-radius:12px;margin:18px 0}.field{display:flex;flex-direction:column;gap:5px}input,select,button{font:inherit;padding:9px 11px;border:1px solid #444;border-radius:8px;background:#252834;color:#fff}button{cursor:pointer}button:hover{background:#323747}.primary{background:#096b8e}.danger{background:#702b38}.status{min-height:24px;color:#79e69d}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.card{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:10px;background:#191b23;border-radius:12px;position:relative}.card canvas{width:96px;height:96px;image-rendering:pixelated;background:#000;border-radius:6px}.card input{width:100%;box-sizing:border-box}.buttons{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.buttons button{padding:5px 9px}.empty{padding:30px;text-align:center;color:#888;border:1px dashed #555;border-radius:12px}.badge{display:inline-block;margin-top:6px;padding:2px 7px;border-radius:99px;background:#4b2857;color:#ffc7ff;font-size:12px}.stats{margin:8px 0;color:#aaa}code{background:#222733;padding:2px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>Robodeck Image + GIF Gallery</h1>
+<p class="note">Still images and every original GIF frame are converted in your browser to 64×64 RGB332. The selected GIF is downloaded completely before playback, then played using its original per-frame timing. Frames are delta-compressed when possible.</p>
+<div class="toolbar">
+  <label class="field">Server token<input id="token" type="password" autocomplete="off" placeholder="same TOKEN as server"></label>
+  <label class="field">Resize mode<select id="fit"><option value="cover">Crop to fill</option><option value="contain">Fit with black bars</option><option value="stretch">Stretch</option></select></label>
+  <label class="field">Add images or GIFs<input id="files" type="file" accept="image/*,.gif" multiple></label>
+  <button id="load">Load saved</button>
+  <button id="save" class="primary">Save gallery</button>
+  <button id="clear" class="danger">Clear list</button>
+</div>
+<div id="status" class="status"></div>
+<div id="stats" class="stats"></div>
+<div id="list"></div>
+<p class="note">Limits: 24 gallery items and 8 MB of decoded 64×64 frame data across the gallery. GIFs are never frame-rate sampled or silently shortened; an oversized GIF is rejected instead. Use a current Chrome/Edge browser over HTTPS or localhost.</p>
+<p class="note">Deck controls: D-pad left/up = previous item, right/down = next item, joystick left/right = switch, joystick click = next. Hold left + right to return to the menu.</p>
+<script>
+const MAX_ITEMS=24;
+const MAX_RAW_BYTES=8*1024*1024;
+let images=[];
+const list=document.getElementById('list');
+const status=document.getElementById('status');
+const stats=document.getElementById('stats');
+function setStatus(text,bad=false){status.textContent=text;status.style.color=bad?'#ff8795':'#79e69d'}
+function bytesToBase64(bytes){let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s)}
+function base64ToBytes(s){const raw=atob(s),out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out}
+function packedToImageData(encoded){const bytes=base64ToBytes(encoded),out=new Uint8ClampedArray(64*64*4);for(let i=0;i<4096;i++){const v=bytes[i]||0;out[i*4]=Math.round(((v>>5)&7)*255/7);out[i*4+1]=Math.round(((v>>2)&7)*255/7);out[i*4+2]=(v&3)*85;out[i*4+3]=255}return new ImageData(out,64,64)}
+function framesOf(item){return item.type==='gif'&&Array.isArray(item.frames)?item.frames:[{durationMs:0,data:item.data}]}
+function galleryRawBytes(){return images.reduce((n,item)=>n+framesOf(item).length*4096,0)}
+function gifDuration(item){return framesOf(item).reduce((n,f)=>n+(Number(f.durationMs)||0),0)}
+function render(){
+ list.innerHTML='';
+ const raw=galleryRawBytes();
+ stats.textContent=images.length+' / '+MAX_ITEMS+' items • decoded pixels '+(raw/1024/1024).toFixed(2)+' / '+(MAX_RAW_BYTES/1024/1024)+' MB';
+ if(!images.length){list.innerHTML='<div class="empty">No images or GIFs yet. Choose files above, then press Save gallery.</div>';return}
+ const grid=document.createElement('div');grid.className='grid';
+ images.forEach((img,i)=>{
+  const card=document.createElement('div');card.className='card';
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const first=framesOf(img)[0];canvas.getContext('2d').putImageData(packedToImageData(first.data),0,0);
+  const side=document.createElement('div');
+  const name=document.createElement('input');name.value=img.name||('IMAGE '+(i+1));name.maxLength=20;name.addEventListener('input',()=>img.name=name.value);
+  const info=document.createElement('div');info.className='note';
+  if(img.type==='gif'){const seconds=gifDuration(img)/1000;const avg=seconds>0?img.frames.length/seconds:0;info.textContent=(i+1)+' / '+images.length+' • '+img.frames.length+' frames • '+seconds.toFixed(2)+' s • '+avg.toFixed(1)+' avg FPS';}
+  else info.textContent=(i+1)+' / '+images.length+' • still image';
+  if(img.type==='gif'){const badge=document.createElement('span');badge.className='badge';badge.textContent='GIF';side.append(name,info,badge)}else side.append(name,info);
+  const buttons=document.createElement('div');buttons.className='buttons';
+  const up=document.createElement('button');up.textContent='←';up.title='Move earlier';up.disabled=i===0;up.onclick=()=>{[images[i-1],images[i]]=[images[i],images[i-1]];render()};
+  const down=document.createElement('button');down.textContent='→';down.title='Move later';down.disabled=i===images.length-1;down.onclick=()=>{[images[i+1],images[i]]=[images[i],images[i+1]];render()};
+  const del=document.createElement('button');del.textContent='Delete';del.className='danger';del.onclick=()=>{images.splice(i,1);render()};
+  buttons.append(up,down,del);side.append(buttons);card.append(canvas,side);grid.append(card);
+ });
+ list.append(grid);
+}
+function packedFromSource(source,width,height){
+ const c=document.createElement('canvas');c.width=64;c.height=64;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.fillStyle='#000';ctx.fillRect(0,0,64,64);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ const mode=document.getElementById('fit').value;let dx=0,dy=0,dw=64,dh=64;
+ if(mode!=='stretch'){const scale=mode==='cover'?Math.max(64/width,64/height):Math.min(64/width,64/height);dw=width*scale;dh=height*scale;dx=(64-dw)/2;dy=(64-dh)/2}
+ ctx.drawImage(source,dx,dy,dw,dh);
+ const rgba=ctx.getImageData(0,0,64,64).data,packed=new Uint8Array(4096);
+ for(let i=0;i<4096;i++)packed[i]=(rgba[i*4]&0xE0)|((rgba[i*4+1]&0xE0)>>3)|((rgba[i*4+2]&0xC0)>>6);
+ return packed;
+}
+async function stillToEntry(file){
+ const bmp=await createImageBitmap(file);const packed=packedFromSource(bmp,bmp.width,bmp.height);bmp.close();
+ return{name:file.name.replace(/\.[^.]+$/,'').slice(0,20),type:'image',data:bytesToBase64(packed)};
+}
+async function gifToEntry(file){
+ if(!window.isSecureContext||typeof window.ImageDecoder!=='function')throw new Error('GIF conversion requires ImageDecoder in a secure page. Use current Chrome/Edge over HTTPS or localhost.');
+ if(typeof ImageDecoder.isTypeSupported==='function'&&!(await ImageDecoder.isTypeSupported('image/gif')))throw new Error('This browser cannot decode animated GIF files.');
+ const decoder=new ImageDecoder({data:await file.arrayBuffer(),type:'image/gif'});
+ try{
+  await decoder.tracks.ready;
+  const track=decoder.tracks.selectedTrack;
+  const sourceCount=Math.max(1,Math.floor(Number(track&&track.frameCount)||1));
+  const requiredRaw=sourceCount*4096;
+  if(galleryRawBytes()+requiredRaw>MAX_RAW_BYTES){
+   throw new Error('This complete GIF has '+sourceCount+' frames and would exceed the 8 MB decoded-frame limit. It was not shortened.');
+  }
+  const output=[];
+  for(let i=0;i<sourceCount;i++){
+   setStatus('Decoding '+file.name+': original frame '+(i+1)+' / '+sourceCount+'…');
+   const result=await decoder.decode({frameIndex:i});const frame=result.image;
+   const width=frame.displayWidth||frame.codedWidth||64,height=frame.displayHeight||frame.codedHeight||64;
+   const packed=packedFromSource(frame,width,height);
+   let duration=Math.round(Number(frame.duration||100000)/1000);
+   if(!Number.isFinite(duration)||duration<=0)duration=100;
+   duration=Math.max(1,Math.min(655350,duration));
+   frame.close();
+   output.push({durationMs:duration,data:bytesToBase64(packed)});
+  }
+  if(output.length<2)return{name:file.name.replace(/\.[^.]+$/,'').slice(0,20),type:'image',data:output[0].data};
+  return{name:file.name.replace(/\.[^.]+$/,'').slice(0,20),type:'gif',loop:true,frames:output};
+ }finally{decoder.close()}
+}
+async function fileToEntry(file){return(file.type==='image/gif'||/\.gif$/i.test(file.name))?gifToEntry(file):stillToEntry(file)}
+document.getElementById('files').addEventListener('change',async e=>{
+ const files=[...e.target.files];
+ if(images.length+files.length>MAX_ITEMS){setStatus('Maximum is '+MAX_ITEMS+' gallery items.',true);return}
+ try{
+  for(const f of files){setStatus('Converting '+f.name+'…');const entry=await fileToEntry(f);const extra=framesOf(entry).length*4096;if(galleryRawBytes()+extra>MAX_RAW_BYTES)throw new Error('The gallery would exceed the 8 MB decoded-frame limit.');images.push(entry);render()}
+  setStatus('Converted. Press Save gallery to upload.');
+ }catch(err){setStatus('Could not convert file: '+err.message,true)}
+ e.target.value='';
+});
+async function api(action,extra={}){
+ const token=document.getElementById('token').value;if(!token)throw new Error('Enter the server token first.');
+ // POST to this exact page URL. This remains correct behind a reverse proxy,
+ // including prefixes such as /robodeck/gallery, and needs only one proxy rule.
+ const apiUrl=location.pathname.replace(/\/+$/,'')||'/gallery';
+ const r=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,token,...extra})});
+ const text=await r.text();
+ let data;
+ try{data=JSON.parse(text)}catch(_){throw new Error('Server returned HTTP '+r.status+': '+(text.trim()||r.statusText))}
+ if(!r.ok||!data.ok)throw new Error(data.error||('Request failed (HTTP '+r.status+')'));return data;
+}
+document.getElementById('load').onclick=async()=>{try{setStatus('Loading…');const d=await api('load');images=d.images||[];render();setStatus('Loaded '+images.length+' item(s).')}catch(e){setStatus(e.message,true)}};
+document.getElementById('save').onclick=async()=>{try{setStatus('Saving…');const d=await api('save',{images});setStatus('Saved '+d.count+' item(s). Open PHOTO on the deck to see them.')}catch(e){setStatus(e.message,true)}};
+document.getElementById('clear').onclick=()=>{images=[];render();setStatus('List cleared locally. Press Save gallery to apply.')};
+render();
+</script>
+</body>
+</html>

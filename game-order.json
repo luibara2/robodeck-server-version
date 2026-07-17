@@ -1,0 +1,259 @@
+{
+  "order": [
+    "snake",
+    "flap",
+    "dino",
+    "bomber",
+    "tanks",
+    "golf",
+    "mine2d",
+    "ski",
+    "dash",
+    "simon",
+    "gallery",
+    "paint",
+    "liquid",
+    "tetris",
+    "astro",
+    "break",
+    "pong",
+    "race",
+    "fprace",
+    "stack",
+    "shoot",
+    "tilt",
+    "maze",
+    "catch",
+    "laby",
+    "cross",
+    "2048",
+    "beat"
+  ],
+  "disabled": [],
+  "games": {
+    "2048": {
+      "name": "2048",
+      "color": [
+        255,
+        180,
+        0
+      ]
+    },
+    "snake": {
+      "name": "SNAKE",
+      "color": [
+        0,
+        255,
+        0
+      ]
+    },
+    "flap": {
+      "name": "FLAP",
+      "color": [
+        255,
+        220,
+        0
+      ]
+    },
+    "simon": {
+      "name": "SIMON",
+      "color": [
+        255,
+        220,
+        0
+      ]
+    },
+    "gallery": {
+      "name": "GALLERY",
+      "color": [
+        255,
+        80,
+        200
+      ]
+    },
+    "tetris": {
+      "name": "TETRIS",
+      "color": [
+        0,
+        200,
+        255
+      ]
+    },
+    "astro": {
+      "name": "ASTRO",
+      "color": [
+        180,
+        80,
+        255
+      ]
+    },
+    "break": {
+      "name": "BREAK",
+      "color": [
+        255,
+        100,
+        0
+      ]
+    },
+    "pong": {
+      "name": "PONG",
+      "color": [
+        0,
+        200,
+        255
+      ]
+    },
+    "race": {
+      "name": "RACE",
+      "color": [
+        200,
+        0,
+        255
+      ]
+    },
+    "stack": {
+      "name": "STACK",
+      "color": [
+        0,
+        255,
+        150
+      ]
+    },
+    "shoot": {
+      "name": "SHOOT",
+      "color": [
+        255,
+        0,
+        120
+      ]
+    },
+    "tilt": {
+      "name": "TILT",
+      "color": [
+        0,
+        80,
+        255
+      ]
+    },
+    "maze": {
+      "name": "MAZE",
+      "color": [
+        0,
+        180,
+        255
+      ]
+    },
+    "catch": {
+      "name": "CATCH",
+      "color": [
+        0,
+        255,
+        150
+      ]
+    },
+    "dino": {
+      "name": "DINO",
+      "color": [
+        80,
+        255,
+        100
+      ]
+    },
+    "ski": {
+      "name": "SKI",
+      "color": [
+        80,
+        180,
+        255
+      ]
+    },
+    "dash": {
+      "name": "DASH",
+      "color": [
+        0,
+        220,
+        255
+      ]
+    },
+    "laby": {
+      "name": "LABYRINTH",
+      "color": [
+        255,
+        120,
+        0
+      ]
+    },
+    "cross": {
+      "name": "CROSS",
+      "color": [
+        100,
+        230,
+        80
+      ]
+    },
+    "beat": {
+      "name": "BEAT",
+      "color": [
+        255,
+        0,
+        180
+      ]
+    },
+    "mine2d": {
+      "name": "MINE2D",
+      "color": [
+        80,
+        220,
+        90
+      ]
+    },
+    "liquid": {
+      "name": "LIQUID",
+      "color": [
+        0,
+        160,
+        255
+      ]
+    },
+    "paint": {
+      "name": "PAINT",
+      "color": [
+        255,
+        120,
+        40
+      ]
+    },
+    "fprace": {
+      "name": "DRIVE",
+      "color": [
+        255,
+        80,
+        0
+      ]
+    },
+    "bomber": {
+      "name": "BOMBER",
+      "color": [
+        255,
+        150,
+        0
+      ]
+    },
+    "tanks": {
+      "name": "TANKS",
+      "color": [
+        80,
+        220,
+        100
+      ]
+    },
+    "golf": {
+      "name": "GOLF",
+      "color": [
+        80,
+        255,
+        140
+      ]
+    }
+  }
+}
