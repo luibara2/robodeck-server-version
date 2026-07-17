@@ -163,10 +163,10 @@ to join using these commands.
 
 ```bash
 # 1. Add your network's credentials
-npx jac --port <port> wifi-add "YOUR_WIFI_SSID" "YOUR_WIFI_PASSWORD"
+npx jac --port <port> wifi-add "YOUR_WIFI_SSID"
 
 # 2. Switch the deck into Station mode (connect to that network)
-npx jac --port <port> wifi-sta
+npx jac --port <port> wifi-sta --no-ap-fallback
 
 # 3. Check the result — this shows the current config and, once connected, the IP
 npx jac --port <port> wifi-get
