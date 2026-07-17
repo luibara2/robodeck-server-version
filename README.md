@@ -53,6 +53,22 @@ time sync, score submit); the server answers. Every request carries a shared
 
 # Part 1 — Server setup
 
+> **Don't want to host your own server?** You can use my public VPS instead —
+> skip Part 1 entirely and just set the `network` block in Part 2c to:
+>
+> ```ts
+> network: {
+>   enabled: true,
+>   host: "107.173.182.181",
+>   port: 8788,
+>   token: "CHANGE-ME-PLEASE2",
+>   deviceName: "ROBODECK",   // ← pick your own unique name so you show up correctly on the leaderboard
+> },
+> ```
+>
+> Heads-up: it's a shared public server, so the leaderboard and gallery are
+> common to everyone using it, and it may occasionally be down or reset.
+
 The server has **no npm dependencies** — it uses only Node's built-in modules.
 
 ### 1. Put the files together
