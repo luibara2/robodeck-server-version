@@ -8,6 +8,9 @@ small zero-dependency Node.js server. The same server also keeps a shared
 
 Built for the [Robotický tábor 2026](https://2026.robotickytabor.cz) Robodeck platform.
 
+
+> **Other versions:** This is the networked build. For a fully offline build (no server, no WiFi, 18 games bundled on the device), see [robodeck-ai-slop](https://github.com/luibara2/robodeck-ai-slop).
+
 ```
 ┌──────────────────────┐        WiFi / UDP :8788        ┌───────────────────────┐
 │   Saturn / Robodeck   │  ◄───────────────────────────►  │   Node.js server.js    │
